@@ -2,17 +2,19 @@ import React, { useContext, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
+import RelatedDoctors from '../components/RelatedDoctors'
 
 const Appoitmnet = () => {
   const { docId } = useParams()
   const { doctors } = useContext(AppContext)
 
+  const dayOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
   const [docInfo, setDocInfo] = useState(null)
 
   const [docSlots, setDocSlots] = useState([])
 
-  const [docIndex, setDocIndex] = useState(0)
+  const [slotIndex, setSlotIndex] = useState(0)
 
   const [slotTime, setSlotTime] = useState('')
 
@@ -23,7 +25,7 @@ const Appoitmnet = () => {
     setDocInfo(docInfo)
   }
 
-  const getAvailableSlot = async()=>{
+  const getAvailableSlot = async () => {
     setDocSlots([])
 
     //getting current date
@@ -32,16 +34,16 @@ const Appoitmnet = () => {
     for (let i = 0; i < 7; i++) {
       //getting date with index
       const currentDate = new Date(today)
-      currentDate.setDate(today.getDate()+i)
+      currentDate.setDate(today.getDate() + i)
 
       //setting end time of the date with index
       let endTime = new Date()
-      endTime.setDate(today.getDate()+i)
-      endTime.setHours(21,0,0,0)
+      endTime.setDate(today.getDate() + i)
+      endTime.setHours(21, 0, 0, 0)
 
       //setting hours
-      if(today.getDate()===currentDate.getDate()){
-        currentDate.setHours(currentDate.getHours() > 10 ? currentDate.getHours()+1 : 10)
+      if (today.getDate() === currentDate.getDate()) {
+        currentDate.setHours(currentDate.getHours() > 10 ? currentDate.getHours() + 1 : 10)
         currentDate.setMinutes(currentDate.getMinutes > 30 ? 30 : 0)
       }
       else {
@@ -51,13 +53,13 @@ const Appoitmnet = () => {
 
       let timeSlots = []
 
-      while(currentDate < endTime) {
-        let formattedTime = currentDate.toLocaleDateString([], { hour: '2-digit', minute: '2-digit'})
+      while (currentDate < endTime) {
+        let formattedTime = currentDate.toLocaleDateString([], { hour: '2-digit', minute: '2-digit' })
 
         // Add Slot to array
         timeSlots.push({
           datetime: new Date(currentDate),
-          time:formattedTime
+          time: formattedTime
         })
 
         // Increment current time by 30 min
@@ -76,8 +78,8 @@ const Appoitmnet = () => {
   }, [docInfo])
 
   useEffect(() => {
-    console.log(setDocSlots());
-    
+    // console.log(docSlots);
+
     // setDocSlots()
   }, [docSlots])
 
@@ -101,8 +103,36 @@ const Appoitmnet = () => {
             <p>Appointment fee : <span className='text-m text-gray-900 font-medium'>${docInfo.fees}</span></p>
           </div>
         </div>
-      </div> 
+      </div>
 
+      {/**BOOKING SLOT */}
+      <div className="sm:ml-72 sm:pl-4 mt-4 font-medium text-gray-700">
+        <p>Booking SLots</p>
+       <div className='flex gap-3 items-center w-full overflow-x-scroll mt-4'>
+        {
+          docSlots.length && docSlots.map((item,index)=>(
+            <div onClick={()=> setSlotIndex(index)} className={`text-center py-6 min-w-16 rounded-full cursor-pointer ${slotIndex === index ? 'bg-primary text-white':'border border-gray-200'}`} key={index}>
+              <p>{item[0] && dayOfWeek[item[0].datetime.getDay()]}</p>
+              <p>{item[0] && item[0].datetime.getDate()}</p>
+            </div>
+          ))
+        }
+       </div>
+       <div className='flex gap-3 items-center w-full overflow-x-scroll mt-4'>
+        {
+          docSlots.length && docSlots[slotIndex].map((item,index)=>(
+            <p onClick={()=> setSlotTime(item.time)} className={`text-sm font-light flex-shrink-0 px-5 py-2 py-6 rounded-full cursor-pointer ${item.time === slotTime ? 'bg-primary text-white':'border border-gray-200'}`} key={index}>
+              {item.time.toLowerCase()}
+            </p>
+          ))
+        }
+       </div>
+       <div>
+        <button className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full mt-4'>Book an Appointment</button>
+       </div>
+      </div>
+      {/** Listing Related DOctors */}
+      <RelatedDoctors docId = {docId} speciality = {docInfo.speciality} />
     </div>
   )
 }
